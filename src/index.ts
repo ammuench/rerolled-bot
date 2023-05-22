@@ -1,0 +1,1 @@
+console.log("Welcome to my TS Template -- Alex Muench");
