@@ -6,20 +6,24 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 
 	"github.com/ammuench/rerolled-bot/internal/db"
+	"github.com/ammuench/rerolled-bot/internal/discord"
 )
 
 const (
 	discordBotEnvKey  = "DISCORD_BOT_KEY"
 	supabaseURLEnvKey = "SUPABASE_URL"
 	supabaseKeyEnvKey = "SUPABASE_KEY"
+	botCommandPrefix  = "!rrb"
+	// TODO: REMOVE THIS AFTER DEV
+	guildID = 1246302013860483142
 )
 
+//
 func main() {
 	err := godotenv.Load()
 	if err != nil {
@@ -31,7 +35,7 @@ func main() {
 		log.Fatal("No Discord Bot Key in .env file")
 	}
 
-	tursoDbInstance, err := db.InitDB()
+	tursoDBInstance, err := db.InitDB()
 	if err != nil {
 		log.Fatal("Error initializing turso db: ", err)
 	}
@@ -43,32 +47,19 @@ func main() {
 		log.Fatal("Error creating discord session: ", err)
 	}
 
-	fmt.Println("Rerolled-Bot is started...")
-
-	discordBot.AddHandler(func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		if m.Author.ID == s.State.User.ID {
-			return
-		}
-
-		if m.Content == "!ping" {
-			s.ChannelMessageSend(m.ChannelID, "!pong @ "+time.Now().String())
-		}
-	})
-
-	discordBot.Identify.Intents = discordgo.IntentsAllWithoutPrivileged
-
 	err = discordBot.Open()
 	if err != nil {
 		fmt.Println("error opening connection,", err)
 		return
 	}
 
-	// Wait here until CTRL-C or other term signal is received.
-	fmt.Println("Rerolled-Bot is now ~*running*~.")
-	fmt.Println("Press CTRL-C to exit.")
+	registeredCmds, err := discord.InitializeCommands(discordBot)
+	if err != nil {
+		log.Fatal("Error creating discord slash commands: ", err)
+	}
 
-	// Register Handlers
-	// discordBot.ApplicationCommandCreate()
+	fmt.Println("Rerolled-Bot is ~*O N L I N E*~")
+	fmt.Println("Press CTRL-C to exit.")
 
 	// Register close signal
 	sc := make(chan os.Signal, 1)
@@ -76,6 +67,7 @@ func main() {
 	<-sc
 
 	// Cleanly close down the Discord session.
+	discord.ShutdownCommands(discordBot, registeredCmds)
 	discordBot.Close()
-	tursoDbInstance.Close()
+	tursoDBInstance.Close()
 }
