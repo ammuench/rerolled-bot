@@ -58,7 +58,7 @@ func main() {
 		log.Fatal("Error creating discord slash commands: ", err)
 	}
 
-	fmt.Println("Rerolled-Bot is ~*O N L I N E*~")
+	fmt.Println("Rerolled-Bot is now ~*O N L I N E*~")
 	fmt.Println("Press CTRL-C to exit.")
 
 	// Register close signal
@@ -67,7 +67,7 @@ func main() {
 	<-sc
 
 	// Cleanly close down the Discord session.
-	discord.ShutdownCommands(discordBot, registeredCmds)
+	discord.TeardownAllCommands(discordBot, registeredCmds)
 	discordBot.Close()
 	tursoDBInstance.Close()
 }

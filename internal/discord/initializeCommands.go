@@ -9,44 +9,51 @@ import (
 var adminPermission int64 = discordgo.PermissionAdministrator
 var adminAllowed = true
 
+var (
+	cmdUpdateRole            = "update-my-roles"
+	cmdAddAssignableRole     = "add-assignable-role"
+	cmdToggleMplusRole       = "toggle-mplus"
+	cmdToggleAcheivementRole = "toggle-achievements"
+	cmdTogglePVPRole         = "toggle-pvp"
+	cmdSelectAssignableRoles =  "add-assignable-role-select"
+)
+
 var discordCommands = []*discordgo.ApplicationCommand{
 	{
-		Name:        "update-my-roles",
+		Name:        cmdUpdateRole,
 		Description: "Command to update your opt-in roles in the server",
 	},
 	{
-		Name:                     "add-assignable-role",
+		Name:                     cmdAddAssignableRole,
 		Description:              "Adds a role to the public assignable roles list",
 		DefaultMemberPermissions: &adminPermission,
 	},
 }
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	"update-my-roles": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Hey there! Congratulations, you just executed the `update-my-roles` command",
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
-	},
-	"add-assignable-role": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: "Hey there! Congratulations, you just executed the `add-assignable-role`  command",
-				Flags: discordgo.MessageFlagsEphemeral,
-			},
-		})
-	},
+	cmdUpdateRole:        UpdateRoles,
+	cmdAddAssignableRole: AddAssignableRole,
+}
+
+var interactionComponentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+	cmdToggleMplusRole: ToggleMPlusRole,
+	cmdSelectAssignableRoles: HandleAddAssignableRoleSelect,
 }
 
 func InitializeCommands(discordBot *discordgo.Session) ([]*discordgo.ApplicationCommand, error) {
+	// Register command handlers
 	discordBot.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
+		switch i.Type {
+		case discordgo.InteractionApplicationCommand:
+			if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+				h(s, i)
+			}
+		case discordgo.InteractionMessageComponent:
+			if h, ok := interactionComponentHandlers[i.MessageComponentData().CustomID]; ok {
+				h(s, i)
+			}
 		}
 	})
+
 	registeredCommands := make([]*discordgo.ApplicationCommand, 2)
 	for dCmdIdx, dCmd := range discordCommands {
 		successfulSetCmd, err := discordBot.ApplicationCommandCreate(discordBot.State.User.ID, "1246302013860483142", dCmd)
@@ -56,10 +63,11 @@ func InitializeCommands(discordBot *discordgo.Session) ([]*discordgo.Application
 
 		registeredCommands[dCmdIdx] = successfulSetCmd
 	}
+
 	return registeredCommands, nil
 }
 
-func ShutdownCommands(discordBot *discordgo.Session, registeredCmds []*discordgo.ApplicationCommand) {
+func TeardownAllCommands(discordBot *discordgo.Session, registeredCmds []*discordgo.ApplicationCommand) {
 	for _, rCmd := range registeredCmds {
 		err := discordBot.ApplicationCommandDelete(discordBot.State.User.ID, "1246302013860483142", rCmd.ID)
 		if err != nil {
