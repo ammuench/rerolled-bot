@@ -12,12 +12,8 @@ var (
 )
 
 var (
-	cmdUpdateRole            = "update-my-roles"
-	cmdAddAssignableRole     = "add-assignable-role"
-	cmdToggleMplusRole       = "toggle-mplus"
-	cmdToggleAcheivementRole = "toggle-achievements"
-	cmdTogglePVPRole         = "toggle-pvp"
-	cmdSelectAssignableRoles = "add-assignable-role-select"
+	cmdUpdateRole         = "update-my-roles"
+	cmdProcessUpdateRoles = "process-updated-roles"
 )
 
 var discordCommands = []*discordgo.ApplicationCommand{
@@ -25,21 +21,14 @@ var discordCommands = []*discordgo.ApplicationCommand{
 		Name:        cmdUpdateRole,
 		Description: "Command to update your opt-in roles in the server",
 	},
-	{
-		Name:                     cmdAddAssignableRole,
-		Description:              "Adds a role to the public assignable roles list",
-		DefaultMemberPermissions: &adminPermission,
-	},
 }
 
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	cmdUpdateRole:        UpdateRoles,
-	cmdAddAssignableRole: AddAssignableRole,
+	cmdUpdateRole: UpdateRoles,
 }
 
 var interactionComponentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	cmdToggleMplusRole:       ToggleMPlusRole,
-	cmdSelectAssignableRoles: HandleAddAssignableRoleSelect,
+	cmdProcessUpdateRoles: ProcessUpdateRoles,
 }
 
 func InitializeCommands(discordBot *discordgo.Session) ([]*discordgo.ApplicationCommand, error) {
