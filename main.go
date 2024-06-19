@@ -16,8 +16,6 @@ import (
 
 const (
 	discordBotEnvKey = "DISCORD_BOT_KEY"
-	// TODO: REMOVE THIS AFTER DEV
-	guildID = 1246302013860483142
 )
 
 func main() {

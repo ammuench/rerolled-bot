@@ -10,7 +10,7 @@ import (
 )
 
 type SelectableRole struct {
-	roleId int
+	roleID int
 	name   string
 	emoji  string
 }
@@ -28,7 +28,7 @@ func cmdError(err error, s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 func UpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	database := db.GetDB()
-	sqlAssignableRoles, err := database.Query("SELECT roleId, name, emoji from assignable_roles WHERE enabled = true AND guildId = ?", i.GuildID)
+	sqlAssignableRoles, err := database.Query("SELECT roleId as roleID, name, emoji from assignable_roles WHERE enabled = true AND guildId = ?", i.GuildID)
 	if err != nil {
 		cmdError(err, s, i)
 	}
@@ -38,7 +38,7 @@ func UpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	for sqlAssignableRoles.Next() {
 		var role SelectableRole
-		err = sqlAssignableRoles.Scan(&role.roleId, &role.name, &role.emoji)
+		err = sqlAssignableRoles.Scan(&role.roleID, &role.name, &role.emoji)
 		if err != nil {
 			cmdError(err, s, i)
 		}
@@ -49,7 +49,7 @@ func UpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	totalRoles := len(assignableRoles)
 	generatedRoleOptions := []discordgo.SelectMenuOption{}
 	for _, role := range assignableRoles {
-		roleIDString := strconv.Itoa(role.roleId)
+		roleIDString := strconv.Itoa(role.roleID)
 		generatedRoleOptions = append(generatedRoleOptions, discordgo.SelectMenuOption{
 			Label:   role.name,
 			Value:   roleIDString,
@@ -109,11 +109,11 @@ func ProcessUpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	for sqlAssignableRoles.Next() {
 		var role SelectableRole
-		err = sqlAssignableRoles.Scan(&role.roleId, &role.name, &role.emoji)
+		err = sqlAssignableRoles.Scan(&role.roleID, &role.name, &role.emoji)
 		if err != nil {
 			cmdError(err, s, i)
 		}
-		roleString := strconv.Itoa(role.roleId)
+		roleString := strconv.Itoa(role.roleID)
 		if !slices.Contains(selectedRoleIds, roleString) && slices.Contains(i.Member.Roles, roleString) {
 			err := s.GuildMemberRoleRemove(i.GuildID, i.Member.User.ID, roleString)
 			if err != nil {
