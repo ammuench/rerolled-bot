@@ -3,8 +3,11 @@ package discord
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/bwmarrin/discordgo"
+
+	"github.com/ammuench/rerolled-bot/internal/db"
 )
 
 func AddAssignableRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -51,12 +54,10 @@ func AddAssignableRole(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				},
 			},
 		})
-
 		if err != nil {
 			log.Printf("Error running %v command ==> %v\n", cmdAddAssignableRole, err)
 		}
 	}
-
 }
 
 func HandleAddAssignableRoleSelect(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -70,8 +71,29 @@ func HandleAddAssignableRoleSelect(s *discordgo.Session, i *discordgo.Interactio
 
 	data := i.MessageComponentData()
 
+	selectedIds := []int{}
 	for selectOptIdx, selectOpt := range data.Values {
 		fmt.Printf("Selection #%v: \n", selectOptIdx)
 		fmt.Printf(":::> %v\n", selectOpt)
+		parsedRole, err := strconv.Atoi(selectOpt)
+		if err != nil {
+			log.Printf("Error parsing role %v ==> %v\n", selectOpt, err)
+		} else {
+			selectedIds = append(selectedIds, parsedRole)
+		}
+	}
+
+	database := db.GetDB()
+	// FIXME: Figure out how to properly print out full slice list
+	disableSQLCmd := fmt.Sprintf("UPDATE assignable_roles SET enabled = false WHERE roleID NOT IN (%v)", selectedIds[0])
+	_, err := database.Query(disableSQLCmd)
+	if err != nil {
+		log.Printf("Error querying database ==> %v\n", err)
+	}
+
+	// FIXME: Figure out how to properly print out full slice list
+	_, err = database.Query("UPDATE assignable_roles SET enabled = true WHERE roleID IN (?)", selectedIds[0])
+	if err != nil {
+		log.Printf("Error querying database ==> %v\n", err)
 	}
 }

@@ -6,8 +6,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-var adminPermission int64 = discordgo.PermissionAdministrator
-var adminAllowed = true
+var (
+	adminPermission int64 = discordgo.PermissionAdministrator
+	adminAllowed          = true
+)
 
 var (
 	cmdUpdateRole            = "update-my-roles"
@@ -15,7 +17,7 @@ var (
 	cmdToggleMplusRole       = "toggle-mplus"
 	cmdToggleAcheivementRole = "toggle-achievements"
 	cmdTogglePVPRole         = "toggle-pvp"
-	cmdSelectAssignableRoles =  "add-assignable-role-select"
+	cmdSelectAssignableRoles = "add-assignable-role-select"
 )
 
 var discordCommands = []*discordgo.ApplicationCommand{
@@ -29,13 +31,14 @@ var discordCommands = []*discordgo.ApplicationCommand{
 		DefaultMemberPermissions: &adminPermission,
 	},
 }
+
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 	cmdUpdateRole:        UpdateRoles,
 	cmdAddAssignableRole: AddAssignableRole,
 }
 
 var interactionComponentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	cmdToggleMplusRole: ToggleMPlusRole,
+	cmdToggleMplusRole:       ToggleMPlusRole,
 	cmdSelectAssignableRoles: HandleAddAssignableRoleSelect,
 }
 

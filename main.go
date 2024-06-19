@@ -15,15 +15,11 @@ import (
 )
 
 const (
-	discordBotEnvKey  = "DISCORD_BOT_KEY"
-	supabaseURLEnvKey = "SUPABASE_URL"
-	supabaseKeyEnvKey = "SUPABASE_KEY"
-	botCommandPrefix  = "!rrb"
+	discordBotEnvKey = "DISCORD_BOT_KEY"
 	// TODO: REMOVE THIS AFTER DEV
 	guildID = 1246302013860483142
 )
 
-//
 func main() {
 	err := godotenv.Load()
 	if err != nil {
