@@ -4,6 +4,7 @@ import (
 	"log"
 	"slices"
 	"strconv"
+	"time"
 
 	"github.com/ammuench/rerolled-bot/internal/db"
 	"github.com/bwmarrin/discordgo"
@@ -14,6 +15,8 @@ type SelectableRole struct {
 	name   string
 	emoji  string
 }
+
+var ProcessUpdateInteractions = make(map[string]*discordgo.Interaction)
 
 func cmdError(err error, s *discordgo.Session, i *discordgo.InteractionCreate) {
 	log.Printf("Error running %v command ==> %v\n", cmdUpdateRole, err)
@@ -84,6 +87,7 @@ func UpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if err != nil {
 		cmdError(err, s, i)
 	}
+	ProcessUpdateInteractions[i.Member.User.ID] = i.Interaction
 }
 
 func ProcessUpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -115,19 +119,31 @@ func ProcessUpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		}
 		roleString := strconv.Itoa(role.roleID)
 		if !slices.Contains(selectedRoleIds, roleString) && slices.Contains(i.Member.Roles, roleString) {
-			err := s.GuildMemberRoleRemove(i.GuildID, i.Member.User.ID, roleString)
-			if err != nil {
-				cmdError(err, s, i)
+			removeRoleErr := s.GuildMemberRoleRemove(i.GuildID, i.Member.User.ID, roleString)
+			if removeRoleErr != nil {
+				cmdError(removeRoleErr, s, i)
 				break
 			}
 		}
 	}
 
-	s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "Roles updated ✅",
-			Flags:   discordgo.MessageFlagsEphemeral,
-		},
+	successContent := "Roles updated ✅"
+	emptyComponents := []discordgo.MessageComponent{}
+	_, err = s.InteractionResponseEdit(ProcessUpdateInteractions[i.Member.User.ID], &discordgo.WebhookEdit{
+		Components: &emptyComponents,
+		Content:    &successContent,
 	})
+	if err != nil {
+		cmdError(err, s, i)
+	}
+
+	go func() {
+		time.Sleep(5 * time.Second)
+
+		deleteErr := s.InteractionResponseDelete(ProcessUpdateInteractions[i.Member.User.ID])
+		if deleteErr != nil {
+			cmdError(deleteErr, s, i)
+		}
+		delete(ProcessUpdateInteractions, i.Member.User.ID)
+	}()
 }

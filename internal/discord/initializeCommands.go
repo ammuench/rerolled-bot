@@ -46,7 +46,7 @@ func InitializeCommands(discordBot *discordgo.Session) ([]*discordgo.Application
 		}
 	})
 
-	registeredCommands := make([]*discordgo.ApplicationCommand, 2)
+	registeredCommands := make([]*discordgo.ApplicationCommand, len(discordCommands))
 	for dCmdIdx, dCmd := range discordCommands {
 		successfulSetCmd, err := discordBot.ApplicationCommandCreate(discordBot.State.User.ID, "1246302013860483142", dCmd)
 		if err != nil {
