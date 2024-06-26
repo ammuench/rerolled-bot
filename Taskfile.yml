@@ -1,0 +1,12 @@
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - go build .
+  run:
+    cmds:
+      - go run main.go
+  format:
+    cmds:
+      - gofumpt -w .
