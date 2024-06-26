@@ -26,7 +26,18 @@ func AddKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if err != nil {
 			LogCmdError(err, cmdRemoveKarma, s, i)
 		}
-	} else {
+	} else if optionUser.ID == i.Member.User.ID {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				 Content: "📛 You can't give yourself points 📛",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		if err != nil {
+			LogCmdError(err, cmdRemoveKarma, s, i)
+		}
+	}else{
 		parsedUserID, err := strconv.Atoi(optionUser.ID)
 		if err != nil {
 			LogCmdError(err, cmdRemoveKarma, s, i)
