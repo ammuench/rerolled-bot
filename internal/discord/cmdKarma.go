@@ -16,13 +16,13 @@ func AddKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	parsedUserID, err := strconv.Atoi(optionUser.ID)
 	if err != nil {
-		LogCmdError(err, &cmdRemoveKarma, s, i)
+		LogCmdError(err, cmdRemoveKarma, s, i)
 		return
 	}
 
 	newScore, err := updateUserKarma(parsedUserID, 1)
 	if err != nil {
-		LogCmdError(err, &cmdRemoveKarma, s, i)
+		LogCmdError(err, cmdRemoveKarma, s, i)
 		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -31,7 +31,7 @@ func AddKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 		if err != nil {
-			LogCmdError(err, &cmdRemoveKarma, s, i)
+			LogCmdError(err, cmdRemoveKarma, s, i)
 		}
 	} else {
 		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -41,7 +41,7 @@ func AddKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 		if err != nil {
-			LogCmdError(err, &cmdRemoveKarma, s, i)
+			LogCmdError(err, cmdRemoveKarma, s, i)
 		}
 	}
 }
@@ -51,13 +51,13 @@ func RemoveKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	optionUser := options[0].UserValue(s)
 	parsedUserID, err := strconv.Atoi(optionUser.ID)
 	if err != nil {
-		LogCmdError(err, &cmdRemoveKarma, s, i)
+		LogCmdError(err, cmdRemoveKarma, s, i)
 		return
 	}
 
 	newScore, err := updateUserKarma(parsedUserID, -1)
 	if err != nil {
-		LogCmdError(err, &cmdRemoveKarma, s, i)
+		LogCmdError(err, cmdRemoveKarma, s, i)
 		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -66,7 +66,7 @@ func RemoveKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 		if err != nil {
-			LogCmdError(err, &cmdRemoveKarma, s, i)
+			LogCmdError(err, cmdRemoveKarma, s, i)
 		}
 	} else {
 		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -76,7 +76,7 @@ func RemoveKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			},
 		})
 		if err != nil {
-			LogCmdError(err, &cmdRemoveKarma, s, i)
+			LogCmdError(err, cmdRemoveKarma, s, i)
 		}
 	}
 }

@@ -21,7 +21,7 @@ func UpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	database := db.GetDB()
 	sqlAssignableRoles, err := database.Query("SELECT roleId as roleID, name, emoji from assignable_roles WHERE enabled = true AND guildId = ?", i.GuildID)
 	if err != nil {
-		LogCmdError(err, &cmdUpdateRole, s, i)
+		LogCmdError(err, cmdUpdateRole, s, i)
 	}
 	defer sqlAssignableRoles.Close()
 
@@ -31,7 +31,7 @@ func UpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		var role SelectableRole
 		err = sqlAssignableRoles.Scan(&role.roleID, &role.name, &role.emoji)
 		if err != nil {
-			LogCmdError(err, &cmdUpdateRole, s, i)
+			LogCmdError(err, cmdUpdateRole, s, i)
 		}
 		assignableRoles = append(assignableRoles, role)
 	}
@@ -73,7 +73,7 @@ func UpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		},
 	})
 	if err != nil {
-		LogCmdError(err, &cmdUpdateRole, s, i)
+		LogCmdError(err, cmdUpdateRole, s, i)
 	}
 	ProcessUpdateInteractions[i.Member.User.ID] = i.Interaction
 }
@@ -87,7 +87,7 @@ func ProcessUpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		err := s.GuildMemberRoleAdd(i.GuildID, i.Member.User.ID, selectOpt)
 		selectedRoleIds = append(selectedRoleIds, selectOpt)
 		if err != nil {
-			LogCmdError(err, &cmdUpdateRole, s, i)
+			LogCmdError(err, cmdUpdateRole, s, i)
 			break
 		}
 	}
@@ -95,7 +95,7 @@ func ProcessUpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	database := db.GetDB()
 	sqlAssignableRoles, err := database.Query("SELECT roleId, name, emoji from assignable_roles WHERE enabled = true AND guildId = ?", i.GuildID)
 	if err != nil {
-		LogCmdError(err, &cmdUpdateRole, s, i)
+		LogCmdError(err, cmdUpdateRole, s, i)
 	}
 	defer sqlAssignableRoles.Close()
 
@@ -103,13 +103,13 @@ func ProcessUpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		var role SelectableRole
 		err = sqlAssignableRoles.Scan(&role.roleID, &role.name, &role.emoji)
 		if err != nil {
-			LogCmdError(err, &cmdUpdateRole, s, i)
+			LogCmdError(err, cmdUpdateRole, s, i)
 		}
 		roleString := strconv.Itoa(role.roleID)
 		if !slices.Contains(selectedRoleIds, roleString) && slices.Contains(i.Member.Roles, roleString) {
 			removeRoleErr := s.GuildMemberRoleRemove(i.GuildID, i.Member.User.ID, roleString)
 			if removeRoleErr != nil {
-				LogCmdError(removeRoleErr, &cmdUpdateRole, s, i)
+				LogCmdError(removeRoleErr, cmdUpdateRole, s, i)
 				break
 			}
 		}
@@ -122,7 +122,7 @@ func ProcessUpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		Content:    &successContent,
 	})
 	if err != nil {
-		LogCmdError(err, &cmdUpdateRole, s, i)
+		LogCmdError(err, cmdUpdateRole, s, i)
 	}
 
 	go func() {
@@ -130,7 +130,7 @@ func ProcessUpdateRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 		deleteErr := s.InteractionResponseDelete(ProcessUpdateInteractions[i.Member.User.ID])
 		if deleteErr != nil {
-			LogCmdError(deleteErr, &cmdUpdateRole, s, i)
+			LogCmdError(deleteErr, cmdUpdateRole, s, i)
 		}
 		delete(ProcessUpdateInteractions, i.Member.User.ID)
 	}()
