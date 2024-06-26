@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/ammuench/rerolled-bot/internal/db"
 
@@ -14,19 +15,11 @@ func AddKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	optionUser := options[0].UserValue(s)
 
-	parsedUserID, err := strconv.Atoi(optionUser.ID)
-	if err != nil {
-		LogCmdError(err, cmdRemoveKarma, s, i)
-		return
-	}
-
-	newScore, err := updateUserKarma(parsedUserID, 1)
-	if err != nil {
-		LogCmdError(err, cmdRemoveKarma, s, i)
-		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	if doesUserHaveCmdTimeout(i.Member.User.ID) {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "Error updating karma ⛔",
+				Content: "You're doing that too much, wait a few more seconds",
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
@@ -34,14 +27,35 @@ func AddKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			LogCmdError(err, cmdRemoveKarma, s, i)
 		}
 	} else {
-		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: fmt.Sprintf("%v gained a point! (Now at %v)", FmtMentionString(optionUser.ID), newScore),
-			},
-		})
+		parsedUserID, err := strconv.Atoi(optionUser.ID)
 		if err != nil {
 			LogCmdError(err, cmdRemoveKarma, s, i)
+			return
+		}
+
+		newScore, err := updateUserKarma(parsedUserID, 1)
+		if err != nil {
+			LogCmdError(err, cmdRemoveKarma, s, i)
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "Error updating karma ⛔",
+					Flags:   discordgo.MessageFlagsEphemeral,
+				},
+			})
+			if err != nil {
+				LogCmdError(err, cmdRemoveKarma, s, i)
+			}
+		} else {
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: fmt.Sprintf("%v gained a point! (Now at %v)", FmtMentionString(optionUser.ID), newScore),
+				},
+			})
+			if err != nil {
+				LogCmdError(err, cmdRemoveKarma, s, i)
+			}
 		}
 	}
 }
@@ -49,19 +63,12 @@ func AddKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 func RemoveKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	optionUser := options[0].UserValue(s)
-	parsedUserID, err := strconv.Atoi(optionUser.ID)
-	if err != nil {
-		LogCmdError(err, cmdRemoveKarma, s, i)
-		return
-	}
 
-	newScore, err := updateUserKarma(parsedUserID, -1)
-	if err != nil {
-		LogCmdError(err, cmdRemoveKarma, s, i)
-		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+	if doesUserHaveCmdTimeout(i.Member.User.ID) {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				Content: "Error updating karma ⛔",
+				Content: "You're doing that too much, wait a few more seconds",
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
@@ -69,14 +76,35 @@ func RemoveKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			LogCmdError(err, cmdRemoveKarma, s, i)
 		}
 	} else {
-		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-			Type: discordgo.InteractionResponseChannelMessageWithSource,
-			Data: &discordgo.InteractionResponseData{
-				Content: fmt.Sprintf("%v lost a point (Now at %v)", FmtMentionString(optionUser.ID), newScore),
-			},
-		})
+		parsedUserID, err := strconv.Atoi(optionUser.ID)
 		if err != nil {
 			LogCmdError(err, cmdRemoveKarma, s, i)
+			return
+		}
+
+		newScore, err := updateUserKarma(parsedUserID, -1)
+		if err != nil {
+			LogCmdError(err, cmdRemoveKarma, s, i)
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "Error updating karma ⛔",
+					Flags:   discordgo.MessageFlagsEphemeral,
+				},
+			})
+			if err != nil {
+				LogCmdError(err, cmdRemoveKarma, s, i)
+			}
+		} else {
+			err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: fmt.Sprintf("%v lost a point (Now at %v)", FmtMentionString(optionUser.ID), newScore),
+				},
+			})
+			if err != nil {
+				LogCmdError(err, cmdRemoveKarma, s, i)
+			}
 		}
 	}
 }
@@ -115,4 +143,24 @@ func updateUserKarma(userID int, adjustmentAmt int) (int, error) {
 
 		return newUserScore, nil
 	}
+}
+
+var timeoutMap = make(map[string]int64)
+
+func doesUserHaveCmdTimeout(userID string) bool {
+	lastCmdTime := timeoutMap[userID]
+
+	if lastCmdTime == 0 {
+		timeoutMap[userID] = time.Now().Unix()
+		return false
+	}
+
+	timeDiff := time.Now().Unix() - lastCmdTime
+
+	if timeDiff > 10 {
+		timeoutMap[userID] = time.Now().Unix()
+		return false
+	}
+
+	return true
 }
