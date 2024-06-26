@@ -14,6 +14,8 @@ var (
 var (
 	cmdUpdateRole         = "update-my-roles"
 	cmdProcessUpdateRoles = "process-updated-roles"
+	cmdAddKarma           = "plus-one"
+	cmdRemoveKarma        = "minus-one"
 )
 
 var discordCommands = []*discordgo.ApplicationCommand{
@@ -21,10 +23,36 @@ var discordCommands = []*discordgo.ApplicationCommand{
 		Name:        cmdUpdateRole,
 		Description: "Command to update your opt-in roles in the server",
 	},
+	{
+		Name:        cmdAddKarma,
+		Description: "Give someone +1",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "User to +1",
+				Required:    true,
+			},
+		},
+	},
+	{
+		Name:        cmdRemoveKarma,
+		Description: "Give someone -1",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Name:        "user",
+				Description: "User to -1",
+				Required:    true,
+			},
+		},
+	},
 }
 
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	cmdUpdateRole: UpdateRoles,
+	cmdUpdateRole:  UpdateRoles,
+	cmdAddKarma:    AddKarma,
+	cmdRemoveKarma: RemoveKarma,
 }
 
 var interactionComponentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
