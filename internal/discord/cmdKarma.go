@@ -15,7 +15,7 @@ func AddKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	optionUser := options[0].UserValue(s)
 
-	if doesUserHaveCmdTimeout(i.Member.User.ID) {
+	if doesUserHaveKarmaCmdTimeout(i.Member.User.ID) {
 		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -30,14 +30,14 @@ func AddKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
-				 Content: "📛 You can't give yourself points 📛",
+				Content: "📛 You can't give yourself points 📛",
 				Flags:   discordgo.MessageFlagsEphemeral,
 			},
 		})
 		if err != nil {
 			LogCmdError(err, cmdRemoveKarma, s, i)
 		}
-	}else{
+	} else {
 		parsedUserID, err := strconv.Atoi(optionUser.ID)
 		if err != nil {
 			LogCmdError(err, cmdRemoveKarma, s, i)
@@ -75,7 +75,7 @@ func RemoveKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	options := i.ApplicationCommandData().Options
 	optionUser := options[0].UserValue(s)
 
-	if doesUserHaveCmdTimeout(i.Member.User.ID) {
+	if doesUserHaveKarmaCmdTimeout(i.Member.User.ID) {
 		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
 			Data: &discordgo.InteractionResponseData{
@@ -156,20 +156,20 @@ func updateUserKarma(userID int, adjustmentAmt int) (int, error) {
 	}
 }
 
-var timeoutMap = make(map[string]int64)
+var karmaTimeoutMap = make(map[string]int64)
 
-func doesUserHaveCmdTimeout(userID string) bool {
-	lastCmdTime := timeoutMap[userID]
+func doesUserHaveKarmaCmdTimeout(userID string) bool {
+	lastCmdTime := karmaTimeoutMap[userID]
 
 	if lastCmdTime == 0 {
-		timeoutMap[userID] = time.Now().Unix()
+		karmaTimeoutMap[userID] = time.Now().Unix()
 		return false
 	}
 
 	timeDiff := time.Now().Unix() - lastCmdTime
 
 	if timeDiff > 10 {
-		timeoutMap[userID] = time.Now().Unix()
+		karmaTimeoutMap[userID] = time.Now().Unix()
 		return false
 	}
 

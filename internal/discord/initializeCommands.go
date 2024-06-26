@@ -16,12 +16,17 @@ var (
 	cmdProcessUpdateRoles = "process-updated-roles"
 	cmdAddKarma           = "plus-one"
 	cmdRemoveKarma        = "minus-one"
+	cmdMplusAffixes       = "current-mplus-affixes"
 )
 
 var discordCommands = []*discordgo.ApplicationCommand{
 	{
 		Name:        cmdUpdateRole,
 		Description: "Command to update your opt-in roles in the server",
+	},
+	{
+		Name:        cmdMplusAffixes,
+		Description: "Get the current mplus affixes and print them in the channel",
 	},
 	{
 		Name:        cmdAddKarma,
@@ -50,9 +55,10 @@ var discordCommands = []*discordgo.ApplicationCommand{
 }
 
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	cmdUpdateRole:  UpdateRoles,
-	cmdAddKarma:    AddKarma,
-	cmdRemoveKarma: RemoveKarma,
+	cmdUpdateRole:   UpdateRoles,
+	cmdAddKarma:     AddKarma,
+	cmdRemoveKarma:  RemoveKarma,
+	cmdMplusAffixes: GetMPlusAffixes,
 }
 
 var interactionComponentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
