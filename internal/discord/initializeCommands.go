@@ -94,7 +94,7 @@ func InitializeCommands(discordBot *discordgo.Session) ([]*discordgo.Application
 
 	registeredCommands := make([]*discordgo.ApplicationCommand, len(discordCommands))
 	for dCmdIdx, dCmd := range discordCommands {
-		successfulSetCmd, err := discordBot.ApplicationCommandCreate(discordBot.State.User.ID, "1246302013860483142", dCmd)
+		successfulSetCmd, err := discordBot.ApplicationCommandCreate(discordBot.State.User.ID, "", dCmd)
 		if err != nil {
 			return nil, fmt.Errorf("cannot create '%v' command: %v", discordCommands[0].Name, err)
 		}
@@ -107,7 +107,7 @@ func InitializeCommands(discordBot *discordgo.Session) ([]*discordgo.Application
 
 func TeardownAllCommands(discordBot *discordgo.Session, registeredCmds []*discordgo.ApplicationCommand) {
 	for _, rCmd := range registeredCmds {
-		err := discordBot.ApplicationCommandDelete(discordBot.State.User.ID, "1246302013860483142", rCmd.ID)
+		err := discordBot.ApplicationCommandDelete(discordBot.State.User.ID, "", rCmd.ID)
 		if err != nil {
 			fmt.Printf("Cannot delete '%v' command: %v\n", rCmd.Name, err)
 		}
