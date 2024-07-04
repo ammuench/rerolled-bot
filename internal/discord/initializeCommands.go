@@ -2,9 +2,13 @@ package discord
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/bwmarrin/discordgo"
 )
+
+const guildIDEnvKey = "GUILD_ID"
 
 var (
 	adminPermission int64 = discordgo.PermissionAdministrator
@@ -77,7 +81,15 @@ var interactionComponentHandlers = map[string]func(s *discordgo.Session, i *disc
 	cmdProcessUpdateRoles: ProcessUpdateRoles,
 }
 
+var GuildID string
+
 func InitializeCommands(discordBot *discordgo.Session) ([]*discordgo.ApplicationCommand, error) {
+	envGuildID, guildIDExists := os.LookupEnv(guildIDEnvKey)
+	if !guildIDExists {
+		log.Fatal("No Guild ID in .env file")
+	}
+	GuildID = envGuildID
+
 	// Register command handlers
 	discordBot.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		switch i.Type {
@@ -94,7 +106,7 @@ func InitializeCommands(discordBot *discordgo.Session) ([]*discordgo.Application
 
 	registeredCommands := make([]*discordgo.ApplicationCommand, len(discordCommands))
 	for dCmdIdx, dCmd := range discordCommands {
-		successfulSetCmd, err := discordBot.ApplicationCommandCreate(discordBot.State.User.ID, "", dCmd)
+		successfulSetCmd, err := discordBot.ApplicationCommandCreate(discordBot.State.User.ID, GuildID, dCmd)
 		if err != nil {
 			return nil, fmt.Errorf("cannot create '%v' command: %v", discordCommands[0].Name, err)
 		}
@@ -107,7 +119,7 @@ func InitializeCommands(discordBot *discordgo.Session) ([]*discordgo.Application
 
 func TeardownAllCommands(discordBot *discordgo.Session, registeredCmds []*discordgo.ApplicationCommand) {
 	for _, rCmd := range registeredCmds {
-		err := discordBot.ApplicationCommandDelete(discordBot.State.User.ID, "", rCmd.ID)
+		err := discordBot.ApplicationCommandDelete(discordBot.State.User.ID, GuildID, rCmd.ID)
 		if err != nil {
 			fmt.Printf("Cannot delete '%v' command: %v\n", rCmd.Name, err)
 		}

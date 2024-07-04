@@ -18,6 +18,8 @@ const (
 	discordBotEnvKey = "DISCORD_BOT_KEY"
 )
 
+var GuildID string = ""
+
 func main() {
 	err := godotenv.Load()
 	if err != nil {
