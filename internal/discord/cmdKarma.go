@@ -120,6 +120,46 @@ func RemoveKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
+func ShowMyKarma(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if doesUserHaveKarmaCmdTimeout(i.Member.User.ID) {
+		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "You're doing that too much, wait a few more seconds",
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		if err != nil {
+			LogCmdError(err, cmdKarmaLeaderboard, s, i)
+		}
+	} else {
+		userIDInt, err := strconv.Atoi(i.Member.User.ID)
+		if err != nil {
+			LogCmdError(err, cmdKarmaLeaderboard, s, i)
+			return
+		}
+
+		userKarmaScore, err := getUserKarma(userIDInt)
+		if err != nil {
+			LogCmdError(err, cmdKarmaLeaderboard, s, i)
+			return
+		}
+
+		err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: fmt.Sprintf("You currently have %v points", userKarmaScore),
+				Flags:   discordgo.MessageFlagsEphemeral,
+			},
+		})
+		if err != nil {
+			LogCmdError(err, cmdKarmaLeaderboard, s, i)
+			return
+		}
+
+	}
+}
+
 func ShowKarmaLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	if doesUserHaveKarmaCmdTimeout(i.Member.User.ID) {
 		err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -192,6 +232,24 @@ func ShowKarmaLeaderboard(s *discordgo.Session, i *discordgo.InteractionCreate) 
 type UserKarma struct {
 	userID int
 	score  int
+}
+
+func getUserKarma(userID int) (int, error) {
+	database := db.GetDB()
+
+	var userKarma UserKarma
+	userMatch := database.QueryRow("SELECT * from karma_points WHERE userID = ?", userID)
+
+	err := userMatch.Scan(&userKarma.userID, &userKarma.score)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return 0, nil
+		} else {
+			return 0, err
+		}
+	}
+
+	return userKarma.score, nil
 }
 
 type KarmaListDirection int8

@@ -58,6 +58,10 @@ var discordCommands = []*discordgo.ApplicationCommand{
 		Name:        cmdKarmaLeaderboard,
 		Description: "Show the top & bottom 5 in karma points",
 	},
+	{
+		Name:        cmdMyKarma,
+		Description: "Show your current karma value",
+	},
 }
 
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -66,6 +70,7 @@ var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.Interac
 	cmdRemoveKarma:      RemoveKarma,
 	cmdMplusAffixes:     GetMPlusAffixes,
 	cmdKarmaLeaderboard: ShowKarmaLeaderboard,
+	cmdMyKarma:          ShowMyKarma,
 }
 
 var interactionComponentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
