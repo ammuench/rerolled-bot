@@ -16,6 +16,8 @@ var (
 	cmdProcessUpdateRoles = "process-updated-roles"
 	cmdAddKarma           = "plus-one"
 	cmdRemoveKarma        = "minus-one"
+	cmdMyKarma            = "show-my-karma"
+	cmdKarmaLeaderboard   = "show-karma-leaderboard"
 	cmdMplusAffixes       = "current-mplus-affixes"
 )
 
@@ -52,13 +54,18 @@ var discordCommands = []*discordgo.ApplicationCommand{
 			},
 		},
 	},
+	{
+		Name:        cmdKarmaLeaderboard,
+		Description: "Show the top & bottom 5 in karma points",
+	},
 }
 
 var commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
-	cmdUpdateRole:   UpdateRoles,
-	cmdAddKarma:     AddKarma,
-	cmdRemoveKarma:  RemoveKarma,
-	cmdMplusAffixes: GetMPlusAffixes,
+	cmdUpdateRole:       UpdateRoles,
+	cmdAddKarma:         AddKarma,
+	cmdRemoveKarma:      RemoveKarma,
+	cmdMplusAffixes:     GetMPlusAffixes,
+	cmdKarmaLeaderboard: ShowKarmaLeaderboard,
 }
 
 var interactionComponentHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
